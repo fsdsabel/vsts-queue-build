@@ -171,28 +171,32 @@ export class EnvironmentConfiguration implements IEnvironmentConfiguration {
 
             // if build definition which start with "#", we will igrone it
             if (!buildName.startsWith("#")) {
-                let buildConfig = new BuildConfiguration(buildName, this.teamProject);
-                buildConfig.configuration = configParser.getBuildConfiguration(buildConfig);
+                var buildConfig = new BuildConfiguration(buildName, this.teamProject);
+                let buildSpecificConfigurations =  configParser.getBuildConfigurations(buildConfig);
+                for(let j = 0; j < buildSpecificConfigurations.length; j++) {
+                    buildConfig = new BuildConfiguration(buildName, this.teamProject);
+                    buildConfig.configuration = buildSpecificConfigurations[j];
 
-                if (this.teamProjectType === TeamProjectType.JsonConfiguration) {
-                    buildConfig.teamProject = buildConfig.configuration['teamProject'];
-                    delete buildConfig.configuration['teamProject'];
+                    if (this.teamProjectType === TeamProjectType.JsonConfiguration) {
+                        buildConfig.teamProject = buildConfig.configuration['teamProject'];
+                        delete buildConfig.configuration['teamProject'];
+                    }
+
+                    if (buildConfig.configuration != null
+                        && Object.getOwnPropertyNames(buildConfig.configuration).indexOf('buildIdOutputVariable') > -1
+                    ) {
+                        buildConfig.buildIdOutputVariable = buildConfig.configuration['buildIdOutputVariable'];
+                        delete buildConfig.configuration['buildIdOutputVariable'];
+                    }
+
+                    if (buildConfig.teamProject == null || buildConfig.teamProject.trim() === '') {
+                        throw new Error("Missing team project configuration. Team project type: " + this.teamProjectType
+                            + ", Build name: " + buildConfig.originalBuildName
+                            + ", Build configuration: " + buildConfig.configuration);
+                    }
+
+                    buildConfigurations.push(buildConfig);
                 }
-
-                if (buildConfig.configuration != null
-                    && Object.getOwnPropertyNames(buildConfig.configuration).indexOf('buildIdOutputVariable') > -1
-                ) {
-                    buildConfig.buildIdOutputVariable = buildConfig.configuration['buildIdOutputVariable'];
-                    delete buildConfig.configuration['buildIdOutputVariable'];
-                }
-
-                if (buildConfig.teamProject == null || buildConfig.teamProject.trim() === '') {
-                    throw new Error("Missing team project configuration. Team project type: " + this.teamProjectType
-                        + ", Build name: " + buildConfig.originalBuildName
-                        + ", Build configuration: " + buildConfig.configuration);
-                }
-
-                buildConfigurations.push(buildConfig);
             }
         }
 

@@ -20,7 +20,7 @@ export class VstsApi {
 
     private createConnection(teamFoundationUri: string, accessToken: string): WebApi {
         let creds = getPersonalAccessTokenHandler(accessToken);
-        let connection = new WebApi(teamFoundationUri, creds);
+        let connection = new WebApi(teamFoundationUri, creds, {ignoreSslError:true});
 
         if (this.configuration.debug) {
             console.log(`TFS uri: ${teamFoundationUri}`);

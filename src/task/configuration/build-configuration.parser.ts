@@ -71,24 +71,50 @@ export class BuildConfigurationParser {
         return keys.find(k => k.toLowerCase() === searchValue.toLowerCase());
     }
 
-    public getBuildConfiguration(config: BuildConfiguration): Build {
+    public getBuildConfigurations(config: BuildConfiguration): Build[] {
         if (this.buildSpecificConfiguration != null) {
             let keys = Object.getOwnPropertyNames(this.buildSpecificConfiguration);
             let key = null;
 
+            console.log("Getting configs...");
+
             if ((key = this.findByKey(keys, config.buildName)) != null) {
-                return this.buildSpecificConfiguration[key];
+                return [this.buildSpecificConfiguration[key]];
 
             } else if ((key = this.findByKey(keys, config.originalBuildName)) != null) {
-                return this.buildSpecificConfiguration[key];
+                return [this.buildSpecificConfiguration[key]];
 
             } else if ((key = this.findByKey(keys, config.path + '\\' + config.buildName)) != null) {
-                return this.buildSpecificConfiguration[key];
+                return [this.buildSpecificConfiguration[key]];
+            }
+            console.log("Getting configs multiple...");
+            // try with multiple configs builddefname1, builddefname2...
+            var result = new Array<Build>();
+            var i = 1;
+            var found;
+            do {
+                console.log(config.buildName);
+                found = false;
+                if ((key = this.findByKey(keys, config.buildName + i)) != null) {
+                    result.push(this.buildSpecificConfiguration[key]);
+                    found = true;    
+                } else if ((key = this.findByKey(keys, config.originalBuildName + i)) != null) {
+                    result.push(this.buildSpecificConfiguration[key]);
+                    found = true;
+    
+                } else if ((key = this.findByKey(keys, config.path + '\\' + config.buildName + i)) != null) {
+                    result.push(this.buildSpecificConfiguration[key]);
+                    found = true;                    
+                }
+                i++;
+            } while(found);
+            if(result.length>0) {
+                return result;
             }
         }
 
         if (this.globalConfiguration != null) {
-            return this.globalConfiguration;
+            return [this.globalConfiguration];
         }
 
         return;
